@@ -16,8 +16,5 @@ class MainActivity : AppCompatActivity() {
             .beginTransaction()
             .replace(R.id.main, HomeFragment.newInstance())
             .commit()
-
-        val apicall = ApiCall()
-        apicall.execute()
     }
 }
