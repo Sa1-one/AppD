@@ -44,6 +44,7 @@ class HomeFragment : Fragment() {
     private lateinit var fLocationClient: FusedLocationProviderClient
     private lateinit var pLauncher: ActivityResultLauncher<String>
     private lateinit var binding: FragmentHomeBinding
+    private var weatherModel: WeatherModel? = null
 
     private val client = OkHttpClient()
     private val model: MainVM by activityViewModels()
@@ -99,6 +100,7 @@ class HomeFragment : Fragment() {
                 }
             })
         }
+        weatherShare()
     }
 
     private fun checkLocation() {
@@ -117,6 +119,7 @@ class HomeFragment : Fragment() {
         val lm = activity?.getSystemService(Context.LOCATION_SERVICE) as LocationManager
         return lm.isProviderEnabled(LocationManager.GPS_PROVIDER)
     }
+
 
     private fun getLocation() {
         val ct = CancellationTokenSource()
@@ -143,6 +146,7 @@ class HomeFragment : Fragment() {
 
     private fun updateCurrentCard() = with(binding) {
         model.liveDataCurrent.observe(viewLifecycleOwner) {
+            weatherModel = it
             val maxMinTemp = "${it.maxTemp}°C/${it.minTemp}°C"
             tvData.text = it.dayTime
             tvCity.text = it.cityName
@@ -153,6 +157,28 @@ class HomeFragment : Fragment() {
         }
     }
 
+        private fun weatherShare(){
+            binding.weatherShare.setOnClickListener {
+                //Создаем интент
+                val intent = Intent()
+                //Указываем action с которым он запускается
+                intent.action = Intent.ACTION_SEND
+                //Кладем данные о нашем фильме
+                intent.putExtra(
+                    Intent.EXTRA_TEXT,
+                    "Город: ${weatherModel?.cityName} \n" +
+                            "Дата и время: ${weatherModel?.dayTime} \n" +
+                            "Состояние: ${weatherModel?.condition} \n" +
+                            "Температура в данный момент: ${weatherModel?.currentTemp}°C \n" +
+                            "Ожидаемая за день максимальная: ${weatherModel?.maxTemp}°C и минимальная температура: ${weatherModel?.minTemp}°C"
+
+                )
+                //Указываем MIME тип, чтобы система знала, какое приложения предложить
+                intent.type = "text/plain"
+                //Запускаем наше активити
+                startActivity(Intent.createChooser(intent, "Share To:"))
+            }
+        }
 
 
     private fun permissionListener() {
