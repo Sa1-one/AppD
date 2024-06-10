@@ -50,6 +50,7 @@ dependencies {
     implementation(libs.material)
     implementation(libs.androidx.activity)
     implementation(libs.androidx.constraintlayout)
+    implementation(libs.firebase.messaging.ktx)
 
 //Room
     val room_version = "2.6.1"
@@ -61,6 +62,7 @@ dependencies {
     implementation ("androidx.coordinatorlayout:coordinatorlayout:1.1.0")
 
     implementation("androidx.room:room-ktx:$room_version")
+    implementation ("androidx.work:work-runtime-ktx:2.9.0")
 
     implementation("androidx.lifecycle:lifecycle-livedata-ktx:2.8.0")
     implementation("com.squareup.retrofit2:retrofit:2.9.0")
