@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "714677697406",
+    "project_id": "appd-26705",
+    "storage_bucket": "appd-26705.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:714677697406:android:6e2a76e9fad14c20b4d12f",
+        "android_client_info": {
+          "package_name": "first.sai.appd"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBGXNrnDrmonEKThXs297YoH1pDRhieO-U"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
