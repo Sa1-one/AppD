@@ -4,7 +4,8 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:alpha="0.5">
+    android:alpha="0.5"
+    tools:context=".fragment.HomeFragment">
 
     <ImageView
         android:id="@+id/imageView"
@@ -51,9 +52,8 @@
                 android:id="@+id/img_weahter"
                 android:layout_width="40dp"
                 android:layout_height="40dp"
-                android:layout_marginStart="10dp"
                 android:src="@drawable/ic_launcher_foreground"
-                app:layout_constraintStart_toEndOf="@+id/tv_data"
+                app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintTop_toTopOf="parent" />
 
             <TextView
@@ -106,12 +106,12 @@
                 android:id="@+id/ib_search"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginEnd="10dp"
+                android:layout_marginStart="15dp"
                 android:layout_marginBottom="15dp"
                 android:background="@null"
                 android:src="@drawable/baseline_content_paste_search_24"
                 app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintEnd_toStartOf="@+id/ib_sync"
+                app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@+id/tv_condition" />
 
             <ImageButton
@@ -123,26 +123,6 @@
                 android:src="@drawable/baseline_sync_24"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintTop_toTopOf="@+id/ib_search" />
-
-            <ImageView
-                android:id="@+id/weather_share"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginEnd="10dp"
-                android:src="@drawable/baseline_share_24"
-                app:layout_constraintBottom_toBottomOf="@+id/ib_search"
-                app:layout_constraintEnd_toStartOf="@+id/ib_search" />
-
-            <ImageView
-                android:id="@+id/img_dark"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="5dp"
-                android:layout_marginEnd="5dp"
-                android:src="@drawable/baseline_brightness_4_24"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintTop_toTopOf="parent" />
-
         </androidx.constraintlayout.widget.ConstraintLayout>
     </androidx.cardview.widget.CardView>
 

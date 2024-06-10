@@ -1,15 +1,14 @@
-package first.sai.appd
+package first.sai.appd.fragment
 
-import first.sai.appd.data.NotificationWorker
 import android.Manifest
-import android.app.NotificationChannel
-import android.app.NotificationManager
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.location.LocationManager
-import android.os.Build
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
 import android.os.Bundle
+import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -17,22 +16,21 @@ import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.app.ActivityCompat
-import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentActivity
 import androidx.fragment.app.activityViewModels
-import androidx.work.*
+import androidx.room.Room
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
 import com.google.android.gms.tasks.CancellationTokenSource
 import com.google.android.material.tabs.TabLayoutMediator
 import com.squareup.picasso.Picasso
+import first.sai.appd.API
+import first.sai.appd.DialogManager
+import first.sai.appd.MainVM
 import first.sai.appd.adapters.WeatherModel
 import first.sai.appd.adapters.vpAdapter
 import first.sai.appd.databinding.FragmentHomeBinding
-import first.sai.appd.fragment.DaysFragment
-import first.sai.appd.fragment.HoursFragment
-import first.sai.appd.fragment.isPermissionGranted
 import okhttp3.Call
 import okhttp3.Callback
 import okhttp3.OkHttpClient
@@ -40,16 +38,12 @@ import okhttp3.Request
 import okhttp3.Response
 import org.json.JSONObject
 import java.io.IOException
-import java.util.concurrent.TimeUnit
 
 class HomeFragment : Fragment() {
 
     private lateinit var fLocationClient: FusedLocationProviderClient
     private lateinit var pLauncher: ActivityResultLauncher<String>
     private lateinit var binding: FragmentHomeBinding
-    private var weatherModel: WeatherModel? = null
-    private var isImageOne = true
-
 
     private val client = OkHttpClient()
     private val model: MainVM by activityViewModels()
@@ -70,7 +64,6 @@ class HomeFragment : Fragment() {
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
-
     ): View? {
         binding = FragmentHomeBinding.inflate(inflater, container, false)
         return binding.root
@@ -87,7 +80,6 @@ class HomeFragment : Fragment() {
         super.onResume()
         checkLocation()
     }
-
 
     private fun init() = with(binding) {
         fLocationClient = LocationServices.getFusedLocationProviderClient(requireContext())
@@ -107,46 +99,7 @@ class HomeFragment : Fragment() {
                 }
             })
         }
-        weatherShare()
-        themeDark()
     }
-
-    private fun createNotificationChannel() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val channelId = "TEST_CHANNEL"
-            val channelName = "Test Channel"
-            val channelDescription = "Test Description"
-            val channel = NotificationChannel(
-                channelId,
-                channelName,
-                NotificationManager.IMPORTANCE_DEFAULT
-            ).apply {
-                description = channelDescription
-            }
-            val notificationManager =
-                requireContext().getSystemService(NotificationManager::class.java)
-            notificationManager?.createNotificationChannel(channel)
-        }
-    }
-
-    private fun scheduleNotificationWorker() {
-        val workRequest = PeriodicWorkRequestBuilder<NotificationWorker>(1, TimeUnit.MINUTES)
-            .setConstraints(
-                Constraints.Builder()
-                    .setRequiredNetworkType(NetworkType.NOT_REQUIRED)
-                    .setRequiresBatteryNotLow(true)
-                    .setRequiresStorageNotLow(true)
-                    .build()
-            )
-            .build()
-
-        WorkManager.getInstance(requireContext()).enqueueUniquePeriodicWork(
-            "NotificationWork",
-            ExistingPeriodicWorkPolicy.REPLACE,
-            workRequest
-        )
-    }
-
 
     private fun checkLocation() {
         if (isLocationEnabled()) {
@@ -165,18 +118,6 @@ class HomeFragment : Fragment() {
         return lm.isProviderEnabled(LocationManager.GPS_PROVIDER)
     }
 
-    private fun themeDark(){
-        binding.imgDark.setOnClickListener()
-        {
-            if (isImageOne) {
-                binding.imageView.setImageResource(R.drawable.fon_dark)
-            } else {
-                binding.imageView.setImageResource(R.drawable.fon)
-            }
-            isImageOne = !isImageOne
-        }
-    }
-
     private fun getLocation() {
         val ct = CancellationTokenSource()
         if (ActivityCompat.checkSelfPermission(
@@ -187,17 +128,21 @@ class HomeFragment : Fragment() {
                 Manifest.permission.ACCESS_COARSE_LOCATION
             ) != PackageManager.PERMISSION_GRANTED
         ) {
+            // here to request the missing permissions, and then overriding
+            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+            //                                          int[] grantResults)
+            // to handle the case where the user grants the permission. See the documentation
+            // for ActivityCompat#requestPermissions for more details.
             return
         }
         fLocationClient.getCurrentLocation(Priority.PRIORITY_HIGH_ACCURACY, ct.token)
-            .addOnCompleteListener {
+            .addOnCompleteListener() {
                 requestWeatherData("${it.result.latitude},${it.result.longitude}")
             }
     }
 
     private fun updateCurrentCard() = with(binding) {
         model.liveDataCurrent.observe(viewLifecycleOwner) {
-            weatherModel = it
             val maxMinTemp = "${it.maxTemp}°C/${it.minTemp}°C"
             tvData.text = it.dayTime
             tvCity.text = it.cityName
@@ -208,22 +153,7 @@ class HomeFragment : Fragment() {
         }
     }
 
-    private fun weatherShare() {
-        binding.weatherShare.setOnClickListener {
-            val intent = Intent()
-            intent.action = Intent.ACTION_SEND
-            intent.putExtra(
-                Intent.EXTRA_TEXT,
-                "Город: ${weatherModel?.cityName} \n" +
-                        "Дата и время: ${weatherModel?.dayTime} \n" +
-                        "Состояние: ${weatherModel?.condition} \n" +
-                        "Температура в данный момент: ${weatherModel?.currentTemp}°C \n" +
-                        "Ожидаемая за день максимальная: ${weatherModel?.maxTemp}°C и минимальная температура: ${weatherModel?.minTemp}°C"
-            )
-            intent.type = "text/plain"
-            startActivity(Intent.createChooser(intent, "Share To:"))
-        }
-    }
+
 
     private fun permissionListener() {
         pLauncher = registerForActivityResult(
@@ -255,7 +185,7 @@ class HomeFragment : Fragment() {
             override fun onResponse(call: Call, response: Response) {
                 try {
                     val responseBody = response.body()
-                    val responseString = responseBody?.string()
+                    val responseString = responseBody?.string() // сохраняем данные в переменную
                     if (responseString != null) {
                         parseWeatherData(responseString)
                     }
@@ -263,6 +193,7 @@ class HomeFragment : Fragment() {
                     e.printStackTrace()
                 }
             }
+
         })
     }
 
@@ -313,5 +244,3 @@ class HomeFragment : Fragment() {
         fun newInstance() = HomeFragment()
     }
 }
-
-
